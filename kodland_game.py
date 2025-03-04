@@ -1,3 +1,5 @@
+import random
+
 import pgzrun
 from pygame import Rect
 
@@ -38,15 +40,38 @@ hero = Actor('character_maleperson_idle')
 hero.x = WIDTH // 2
 hero.y = HEIGHT // 2
 
+zombie = Actor('character_zombie_idle')
+zombie.x = random.randint(20, WIDTH - 20)
+zombie.y = 0
+
+items = Actor('generic_item_color_005')
+items.x = random.randint(20, WIDTH - 20)
+items.y = random.randint(20, HEIGHT - 20)
+
 def update():
     if keyboard.left:
         hero.x = hero.x - 5
     if keyboard.right:
         hero.x = hero.x + 5
 
+    zombie.y = zombie.y + 4
+    if zombie.y > HEIGHT:
+        zombie.y = 0
+    if zombie.colliderect(hero):
+        zombie.x = random.randint(20, WIDTH - 20)
+        zombie.y = 0
+
+    if hero.colliderect(items):
+        items.x = random.randint(20, WIDTH - 20)
+        items.y = random.randint(20, HEIGHT - 20)
+
+
+
 def draw():
     screen.clear()
+    zombie.draw()
     hero.draw()
+    items.draw()
 
 
 pgzrun.go()
