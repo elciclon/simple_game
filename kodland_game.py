@@ -40,7 +40,7 @@ class Hero:
         self.speed = 3
         # hero images
         self.idle_images = ['hero_1', 'hero_2']
-
+        self.run_images = ['hero_run_1', 'hero_run_2','hero_run_3']
         self.current_images = self.idle_images
         self.frame = 0
         self.actor = Actor(self.current_images[self.frame], center=(self.x, self.y))
