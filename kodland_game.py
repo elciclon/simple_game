@@ -17,6 +17,7 @@ background_music = True
 score = 0
 game_over = False
 zombie_speed = 0.5
+game_over_sound_played = False
 
 
 # Buttons class
@@ -37,7 +38,7 @@ class Button:
 
 # Create menu buttons
 start_game_button = Button(300, 200, 200, 50, "Start Game")
-music_button = Button(300, 270, 200, 50, "Music: On")
+music_button = Button(300, 270, 200, 50, "Music & sounds: On")
 exit_button = Button(300, 340, 200, 50, "Exit")
 
 
@@ -53,6 +54,9 @@ class Hero:
         self.frame = 0
         self.actor = Actor(self.current_images[self.frame], center=(self.x, self.y))
         self.animation_timer = 0
+        # Add step sound timer and toggle
+        self.step_timer = 0
+        self.step_toggle = True
 
     def update(self):
         dx = 0
@@ -66,13 +70,30 @@ class Hero:
         elif keyboard.down:
             dy = self.speed
 
-        # Changes between idle and run animation if hero is moving
-        if dx != 0 or dy != 0:
+        moving = dx != 0 or dy != 0
+
+        # If moving, update position and play step sounds periodically.
+
+        if moving:
             self.current_images = self.run_images
             self.x += dx
             self.y += dy
+
+            # Update step timer and play a step sound when the timer reaches a threshold.
+            self.step_timer += 1
+            if self.step_timer >= 7:  # adjust this threshold for timing
+                if self.step_toggle:
+                    if background_music:
+                        sounds.step_1.play()
+                else:
+                    if background_music:
+                        sounds.step_2.play()
+                self.step_toggle = not self.step_toggle
+                self.step_timer = 0
         else:
             self.current_images = self.idle_images
+            # Reset the step timer when not moving to avoid playing sounds on resume.
+            self.step_timer = 0
 
         # Keep the hero inside the screen
         self.x = max(self.actor.width // 2, min(WIDTH - self.actor.width // 2, self.x))
@@ -223,12 +244,16 @@ for r in range(ROWS):
 
 
 def update():
-    global score, game_over, music, state, zombie_speed
+    global score, game_over, music, state, zombie_speed, game_over_sound_played
 
     if state == "menu":
         return  # Do not update game logic in menu state
 
     if game_over:
+        if not game_over_sound_played:
+            if background_music:
+                sounds.game_over.play()
+            game_over_sound_played = True
         return
 
     hero.update()
@@ -243,7 +268,8 @@ def update():
         if not gem.collected and gem.actor.colliderect(hero.actor):
             gem.collected = True
             score += 1
-
+            if background_music:
+                sounds.collect.play()
     # If all gems are collected, restart the level
     if all(gem.collected for gem in gems):
         # Increase zombie speed multiplier
@@ -284,6 +310,7 @@ def update():
     if background_music:
         if not music.is_playing("music"):
             music.play("music")
+
     else:
         music.stop()
 
@@ -292,16 +319,19 @@ def on_mouse_down(pos):
     global state, background_music
     if state == "menu":
         if start_game_button.is_clicked(pos):
+            sounds.start.play()
             state = "game"
         elif exit_button.is_clicked(pos):
+            sounds.close.play()
             exit()
         elif music_button.is_clicked(pos):
+            sounds.select.play()
             if background_music:
                 background_music = False
-                music_button.text = "Music: Off"
+                music_button.text = "Music & sounds: Off"
             else:
                 background_music = True
-                music_button.text = "Music: On"
+                music_button.text = "Music & sounds: On"
 
 
 def draw_grid():
